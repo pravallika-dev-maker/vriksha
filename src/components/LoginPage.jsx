@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkEmailExists, loginUser } from '../services/api';
+import { supabase } from '../services/supabaseConfig';
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -9,8 +10,9 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [otp, setOtp] = useState('');
     const [isCEO, setIsCEO] = useState(false);
-    const [step, setStep] = useState(1); // 1: Email Input, 2: Auth Action
+    const [step, setStep] = useState(1); // 1: Email Input, 2: Auth Action (Password or OTP)
 
     // Check session
     useEffect(() => {
@@ -21,19 +23,49 @@ const LoginPage = () => {
     const handleNextStep = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
         setLoading(true);
 
         try {
             const check = await checkEmailExists(email);
-            // In your database, CEO email should have can_add_users = true
-            if (check.user.can_add_users) {
-                setIsCEO(true);
-            } else {
-                setIsCEO(false);
+            if (!check.user) throw new Error('Account not found.');
+
+            setIsCEO(!!check.user.can_add_users);
+
+            if (!check.user.can_add_users) {
+                // If not CEO, trigger OTP immediately
+                const { error: otpError } = await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: false, // Ensure only existing authorized users can login
+                    }
+                });
+
+                if (otpError) throw otpError;
+                setSuccess('A 6-digit code has been sent to your email.');
             }
+
             setStep(2);
         } catch (err) {
-            setError(err.message || 'Access not granted.');
+            setError(err.message || 'Access not granted. Please contact admin.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOTP = async () => {
+        setError('');
+        setSuccess('');
+        setLoading(true);
+        try {
+            const { error: otpError } = await supabase.auth.signInWithOtp({
+                email: email,
+                options: { shouldCreateUser: false }
+            });
+            if (otpError) throw otpError;
+            setSuccess('A new code has been sent to your email.');
+        } catch (err) {
+            setError(err.message || 'Failed to resend code.');
         } finally {
             setLoading(false);
         }
@@ -52,29 +84,22 @@ const LoginPage = () => {
                 localStorage.setItem('user', JSON.stringify(response.user));
                 navigate('/dashboard');
             } else {
-                // Member Login with Magic Link
-                const { SUPABASE_URL, SUPABASE_ANON_KEY } = await import('../services/supabaseConfig');
-                const check = await checkEmailExists(email);
-
-                const supabaseResponse = await fetch(`${SUPABASE_URL}/auth/v1/magiclink`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        options: { redirectTo: `${window.location.origin}/dashboard` }
-                    })
+                // Member Login with OTP
+                const { data, error: verifyError } = await supabase.auth.verifyOtp({
+                    email,
+                    token: otp,
+                    type: 'email'
                 });
 
-                if (!supabaseResponse.ok) throw new Error('Failed to send Magic Link');
+                if (verifyError) throw verifyError;
 
-                setSuccess("We've sent a secure login link to your email.");
-                localStorage.setItem('pendingUser', JSON.stringify(check.user));
+                // After Supabase verifies the session, we also sync with our backend user object
+                const check = await checkEmailExists(email);
+                localStorage.setItem('user', JSON.stringify(check.user));
+                navigate('/dashboard');
             }
         } catch (err) {
-            setError(err.message || 'Login failed.');
+            setError(err.message || 'Authentication failed.');
         } finally {
             setLoading(false);
         }
@@ -85,8 +110,8 @@ const LoginPage = () => {
             <div className="register-card">
                 <div className="register-header">
                     <h1>Vriksha Portal</h1>
-                    <p style={{ color: '#64748b' }}>
-                        {step === 1 ? 'Enter email to begin' : (isCEO ? 'CEO Authentication' : 'Member Authentication')}
+                    <p style={{ color: '#64748b', fontSize: '0.95rem', marginTop: '8px' }}>
+                        {step === 1 ? 'Enter your authorized email to begin' : (isCEO ? 'CEO Authentication' : 'Enter 6-Digit Code')}
                     </p>
                 </div>
 
@@ -98,19 +123,20 @@ const LoginPage = () => {
                             <input
                                 type="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="ceo@example.com"
+                                onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                                placeholder="name@company.com"
                                 required
+                                style={{ borderRadius: '10px', padding: '12px' }}
                             />
                         </div>
-                        <button type="submit" className="btn-register" disabled={loading} style={{ background: 'var(--primary)', color: 'white' }}>
-                            {loading ? 'Verifying...' : 'Next'}
+                        <button type="submit" className="btn-register" disabled={loading} style={{ background: 'var(--vriksha-green)', color: 'white', borderRadius: '10px', height: '48px', fontWeight: '600' }}>
+                            {loading ? 'Verifying...' : 'Continue'}
                         </button>
                     </form>
                 ) : (
                     <form onSubmit={handleLogin}>
                         {error && <div className="error-message" style={{ color: '#f43f5e', marginBottom: '1rem', textAlign: 'center', fontWeight: '600' }}>{error}</div>}
-                        {success && <div className="success-message" style={{ color: '#10b981', marginBottom: '1.5rem', textAlign: 'center', fontWeight: '600', padding: '10px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>{success}</div>}
+                        {success && <div className="success-message" style={{ color: '#10b981', marginBottom: '1.5rem', textAlign: 'center', fontWeight: '600', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '10px' }}>{success}</div>}
 
                         {isCEO ? (
                             <div className="form-group">
@@ -122,26 +148,37 @@ const LoginPage = () => {
                                     placeholder="••••••••"
                                     required
                                     autoFocus
+                                    style={{ borderRadius: '10px', padding: '12px' }}
                                 />
                             </div>
                         ) : (
-                            <div style={{ textAlign: 'center', color: '#64748b', marginBottom: '1.5rem', padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                <p style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                    Your account is verified. Click below to receive a secure login link in your inbox.
+                            <div className="form-group">
+                                <label>Verification Code</label>
+                                <input
+                                    type="text"
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                                    placeholder="00000000"
+                                    required
+                                    autoFocus
+                                    style={{ borderRadius: '10px', padding: '12px', textAlign: 'center', fontSize: '1.5rem', letterSpacing: '4px', maxWidth: '100%' }}
+                                />
+                                <p style={{ fontSize: '0.85rem', color: '#64748b', textAlign: 'center', marginTop: '12px' }}>
+                                    Didn't get the code? <span onClick={handleResendOTP} style={{ color: 'var(--vriksha-blue)', cursor: 'pointer', fontWeight: '600' }}>Resend</span>
                                 </p>
                             </div>
                         )}
 
-                        <button type="submit" className="btn-register" disabled={loading} style={{ background: 'var(--primary)', color: 'white' }}>
-                            {loading ? 'Processing...' : (isCEO ? 'Login with Password' : 'Send Magic Link')}
+                        <button type="submit" className="btn-register" disabled={loading} style={{ background: 'var(--vriksha-green)', color: 'white', borderRadius: '10px', height: '48px', fontWeight: '600' }}>
+                            {loading ? 'Processing...' : (isCEO ? 'Login' : 'Verify & Login')}
                         </button>
 
                         <button
                             type="button"
-                            onClick={() => setStep(1)}
-                            style={{ width: '100%', marginTop: '12px', padding: '10px', background: 'none', border: '1px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', color: '#64748b', fontSize: '0.9rem' }}
+                            onClick={() => { setStep(1); setOtp(''); setPassword(''); }}
+                            style={{ width: '100%', marginTop: '16px', background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', cursor: 'pointer' }}
                         >
-                            ← Use different email
+                            ← Use a different email
                         </button>
                     </form>
                 )}

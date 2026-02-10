@@ -45,7 +45,7 @@ const RegisterPage = () => {
                 can_add_users: false // New users by default cannot add others
             });
 
-            setSuccess(`User ${formData.fullName} has been authorized. They can now log in using a Magic Link.`);
+            setSuccess(`User ${formData.fullName} has been authorized. They can now log in using a 6-digit verification code.`);
             setFormData({ fullName: '', email: '' });
         } catch (err) {
             setError(err.message || 'Failed to authorize user. Please check if email is unique.');
