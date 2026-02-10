@@ -1,9 +1,23 @@
 const API_BASE_URL = 'https://backend-production-42b0.up.railway.app';
 console.log('Using Hardcoded API_BASE_URL:', API_BASE_URL);
 
-export const fetchProjects = async () => {
+// Helper to get auth headers
+const getAuthHeaders = () => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const headers = { 'Content-Type': 'application/json' };
+    if (user && user.email) {
+        headers['X-User-Email'] = user.email;
+    }
+    return headers;
+};
+
+export const fetchProjects = async (userEmail = null) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/projects/`);
+        const url = userEmail
+            ? `${API_BASE_URL}/projects/?user_email=${encodeURIComponent(userEmail)}`
+            : `${API_BASE_URL}/projects/`;
+
+        const response = await fetch(url, { headers: getAuthHeaders() });
         console.log('fetchProjects status:', response.status);
         if (!response.ok) {
             throw new Error('Failed to fetch projects');
@@ -19,7 +33,7 @@ export const fetchProjects = async () => {
 
 export const fetchStages = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/stages/`);
+        const response = await fetch(`${API_BASE_URL}/stages/`, { headers: getAuthHeaders() });
         if (!response.ok) {
             throw new Error('Failed to fetch stages');
         }
@@ -32,7 +46,7 @@ export const fetchStages = async () => {
 
 export const fetchResources = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/resources/`);
+        const response = await fetch(`${API_BASE_URL}/resources/`, { headers: getAuthHeaders() });
         if (!response.ok) {
             throw new Error('Failed to fetch resources');
         }
@@ -45,7 +59,7 @@ export const fetchResources = async () => {
 
 export const fetchProjectById = async (recordId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/projects/${recordId}`);
+        const response = await fetch(`${API_BASE_URL}/projects/${recordId}`, { headers: getAuthHeaders() });
         if (!response.ok) {
             throw new Error('Project not found');
         }
@@ -58,7 +72,7 @@ export const fetchProjectById = async (recordId) => {
 
 export const fetchResourcesByProject = async (recordId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/resources/project/${recordId}`);
+        const response = await fetch(`${API_BASE_URL}/resources/project/${recordId}`, { headers: getAuthHeaders() });
         if (!response.ok) {
             throw new Error('Failed to fetch resources for project');
         }
@@ -71,7 +85,7 @@ export const fetchResourcesByProject = async (recordId) => {
 
 export const fetchStageHistory = async (recordId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/history/${recordId}`);
+        const response = await fetch(`${API_BASE_URL}/history/${recordId}`, { headers: getAuthHeaders() });
         if (!response.ok) throw new Error('Failed to fetch stage history');
         return await response.json();
     } catch (error) {
@@ -84,7 +98,7 @@ export const createProject = async (projectData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/projects/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(projectData)
         });
         if (!response.ok) {
@@ -102,7 +116,7 @@ export const skipToStage = async (recordId, selectedStageName, nextStageExpected
     try {
         const response = await fetch(`${API_BASE_URL}/projects/${recordId}/skip-to-stage`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 selected_stage_name: selectedStageName,
                 next_stage_expected_date: nextStageExpectedDate
@@ -123,7 +137,7 @@ export const updateProjectStatus = async (recordId, statusData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/projects/${recordId}/status`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(statusData)
         });
         if (!response.ok) {
@@ -191,7 +205,7 @@ export const updateProject = async (recordId, projectData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/projects/${recordId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(projectData)
         });
         if (!response.ok) {
@@ -208,7 +222,8 @@ export const updateProject = async (recordId, projectData) => {
 export const deleteProject = async (recordId) => {
     try {
         const response = await fetch(`${API_BASE_URL}/projects/${recordId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
         if (!response.ok) {
             const error = await response.json();

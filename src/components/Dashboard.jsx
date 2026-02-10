@@ -46,7 +46,7 @@ const Dashboard = () => {
             const loadData = async () => {
                 try {
                     const [projects, stages] = await Promise.all([
-                        fetchProjects(),
+                        fetchProjects(currentUser.email),
                         fetchStages()
                     ]);
 
