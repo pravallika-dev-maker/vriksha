@@ -1,4 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-production-42b0.up.railway.app';
+console.log('Using API_BASE_URL:', API_BASE_URL);
 
 export const fetchProjects = async () => {
     try {
