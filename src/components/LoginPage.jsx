@@ -122,7 +122,25 @@ const LoginPage = () => {
 
                 {step === 1 ? (
                     <form onSubmit={handleNextStep}>
-                        {error && <div className="error-message" style={{ color: '#f43f5e', marginBottom: '1rem', textAlign: 'center', fontWeight: '600' }}>{error}</div>}
+                        {error && (
+                            <div className="error-message" style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                backgroundColor: '#fff1f2',
+                                border: '1px solid #fecdd3',
+                                color: '#e11d48',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                marginBottom: '1.5rem',
+                                textAlign: 'left',
+                                fontSize: '0.85rem',
+                                fontWeight: '500'
+                            }}>
+                                <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                                <span>{error}</span>
+                            </div>
+                        )}
                         <div className="form-group">
                             <label>Email Address</label>
                             <input
