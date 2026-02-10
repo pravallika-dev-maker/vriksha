@@ -36,11 +36,20 @@ const ProjectDetails = () => {
     const [editFormData, setEditFormData] = useState({});
     const [editSaving, setEditSaving] = useState(false);
     const [editError, setEditError] = useState(null);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const getProjectDetails = async () => {
             try {
                 setLoading(true);
+                // Load current user
+                const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+                if (!currentUser) {
+                    navigate('/login');
+                    return;
+                }
+                setUser(currentUser);
+
                 const [projectData, teamData, stagesData, historyData] = await Promise.all([
                     fetchProjectById(recordId),
                     fetchResourcesByProject(recordId),
@@ -124,6 +133,11 @@ const ProjectDetails = () => {
 
     const isProjectReadOnly = () => {
         return project && (project.deal_status === 'Lost' || project.deal_status === 'Closed');
+    };
+
+    const canManageProject = () => {
+        if (!user || !project) return false;
+        return user.can_add_users || project.project_owner_name === user.full_name;
     };
 
     // Stage Skip Handlers
@@ -343,49 +357,58 @@ const ProjectDetails = () => {
                                     minWidth: '160px',
                                     zIndex: 1000
                                 }}>
-                                    <button
-                                        onClick={handleEditClick}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px 16px',
-                                            border: 'none',
-                                            background: 'transparent',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            cursor: 'pointer',
-                                            fontSize: '14px',
-                                            fontWeight: '500',
-                                            color: '#475569',
-                                            borderBottom: '1px solid #f1f5f9'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
-                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                    >
-                                        <Edit2 size={16} />
-                                        <span>Edit Project</span>
-                                    </button>
-                                    <button
-                                        onClick={handleDeleteClick}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px 16px',
-                                            border: 'none',
-                                            background: 'transparent',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            cursor: 'pointer',
-                                            fontSize: '14px',
-                                            fontWeight: '500',
-                                            color: '#ef4444'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.background = '#fef2f2'}
-                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                    >
-                                        <Trash2 size={16} />
-                                        <span>Delete Project</span>
-                                    </button>
+                                    {canManageProject() && (
+                                        <>
+                                            <button
+                                                onClick={handleEditClick}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '12px 16px',
+                                                    border: 'none',
+                                                    background: 'transparent',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    fontWeight: '500',
+                                                    color: '#475569',
+                                                    borderBottom: '1px solid #f1f5f9'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                            >
+                                                <Edit2 size={16} />
+                                                <span>Edit Project</span>
+                                            </button>
+                                            <button
+                                                onClick={handleDeleteClick}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '12px 16px',
+                                                    border: 'none',
+                                                    background: 'transparent',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    fontWeight: '500',
+                                                    color: '#ef4444'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.background = '#fef2f2'}
+                                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                            >
+                                                <Trash2 size={16} />
+                                                <span>Delete Project</span>
+                                            </button>
+                                        </>
+                                    )}
+                                    {!canManageProject() && (
+                                        <div style={{ padding: '12px 16px', fontSize: '12px', color: '#64748b' }}>
+                                            Read-only access
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -415,7 +438,7 @@ const ProjectDetails = () => {
                             Key Metrics
                         </h3>
                         <div style={{ display: 'flex', gap: '12px' }}>
-                            {!isEditingStatus && (
+                            {!isEditingStatus && canManageProject() && (
                                 <button
                                     onClick={handleOpenSkipModal}
                                     disabled={isProjectReadOnly()}
@@ -434,7 +457,7 @@ const ProjectDetails = () => {
                                     Move to Next Stage
                                 </button>
                             )}
-                            {!isEditingStatus && (
+                            {!isEditingStatus && canManageProject() && (
                                 <button
                                     onClick={handleEditStatus}
                                     style={{

@@ -48,6 +48,15 @@ const AddProject = () => {
 
     const loadStages = async () => {
         try {
+            // Get user from localStorage
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            if (user && user.full_name) {
+                setFormData(prev => ({
+                    ...prev,
+                    project_owner_name: user.full_name
+                }));
+            }
+
             const stagesData = await fetchStages();
             const sortedStages = stagesData.sort((a, b) => a.stage_order - b.stage_order);
             setStages(sortedStages);
