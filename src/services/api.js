@@ -186,3 +186,37 @@ export const registerUser = async (userData) => {
         throw error;
     }
 };
+
+export const updateProject = async (recordId, projectData) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/projects/${recordId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(projectData)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to update project');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating project:', error);
+        throw error;
+    }
+};
+
+export const deleteProject = async (recordId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/projects/${recordId}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to delete project');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting project:', error);
+        throw error;
+    }
+};

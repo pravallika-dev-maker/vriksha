@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchProjectById, fetchResourcesByProject, fetchStages, fetchStageHistory, updateProjectStatus, skipToStage } from '../services/api';
+import { fetchProjectById, fetchResourcesByProject, fetchStages, fetchStageHistory, updateProjectStatus, skipToStage, updateProject, deleteProject } from '../services/api';
 import ProgressTimeline from './ProgressTimeline';
-import { ArrowLeft, Users, Calendar, Activity, ChevronRight, DollarSign, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Activity, ChevronRight, DollarSign, AlertCircle, MoreVertical, Edit2, Trash2, X } from 'lucide-react';
 
 const ProjectDetails = () => {
     const { recordId } = useParams();
@@ -29,6 +29,14 @@ const ProjectDetails = () => {
     const [skippingInProgress, setSkippingInProgress] = useState(false);
     const [skipError, setSkipError] = useState(null);
 
+    // Edit/Delete Menu States
+    const [showMenu, setShowMenu] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [editFormData, setEditFormData] = useState({});
+    const [editSaving, setEditSaving] = useState(false);
+    const [editError, setEditError] = useState(null);
+
     useEffect(() => {
         const getProjectDetails = async () => {
             try {
@@ -49,6 +57,13 @@ const ProjectDetails = () => {
                 setStatusFormData({
                     deal_status: projectData.deal_status || 'Open',
                     execution_status: projectData.execution_status || 'Planning'
+                });
+                setEditFormData({
+                    client_name: projectData.client_name || '',
+                    project_owner_name: projectData.project_owner_name || '',
+                    deal_value: projectData.deal_value || '',
+                    start_date: projectData.start_date || '',
+                    expected_closure_date: projectData.expected_closure_date || ''
                 });
                 setLoading(false);
             } catch (err) {
@@ -168,6 +183,48 @@ const ProjectDetails = () => {
             .sort((a, b) => a.stage_order - b.stage_order);
     };
 
+    const handleEditClick = () => {
+        setShowMenu(false);
+        setShowEditModal(true);
+        setEditError(null);
+    };
+
+    const handleDeleteClick = () => {
+        setShowMenu(false);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleEditChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSaveEdit = async () => {
+        setEditSaving(true);
+        setEditError(null);
+        try {
+            const updatedProject = await updateProject(recordId, editFormData);
+            setProject(updatedProject);
+            setShowEditModal(false);
+        } catch (err) {
+            setEditError(err.message || 'Failed to update project');
+        } finally {
+            setEditSaving(false);
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await deleteProject(recordId);
+            navigate('/dashboard');
+        } catch (err) {
+            setEditError(err.message || 'Failed to delete project');
+        }
+    };
+
     if (loading) {
         return (
             <div className="loading-container">
@@ -203,11 +260,96 @@ const ProjectDetails = () => {
             <div className="main-details-card">
 
                 {/* 1. Project Header - Name and Owner FIRST */}
-                <div className="project-header-section">
-                    <h1 className="project-main-title">{project.client_name}</h1>
-                    <div className="owner-badge-inline">
-                        <Users size={16} />
-                        <span className="owner-text">Lead Owner: <strong>{project.project_owner_name}</strong></span>
+                <div className="project-header-section" style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <h1 className="project-main-title">{project.client_name}</h1>
+                            <div className="owner-badge-inline">
+                                <Users size={16} />
+                                <span className="owner-text">Lead Owner: <strong>{project.project_owner_name}</strong></span>
+                            </div>
+                        </div>
+
+                        {/* Three-Dot Menu */}
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                onClick={() => setShowMenu(!showMenu)}
+                                style={{
+                                    background: 'white',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '8px',
+                                    padding: '8px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                                onMouseLeave={(e) => e.target.style.background = 'white'}
+                            >
+                                <MoreVertical size={20} color="#64748b" />
+                            </button>
+
+                            {showMenu && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    marginTop: '8px',
+                                    background: 'white',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                                    minWidth: '160px',
+                                    zIndex: 1000
+                                }}>
+                                    <button
+                                        onClick={handleEditClick}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: 'none',
+                                            background: 'transparent',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            color: '#475569',
+                                            borderBottom: '1px solid #f1f5f9'
+                                        }}
+                                        onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                    >
+                                        <Edit2 size={16} />
+                                        <span>Edit Project</span>
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteClick}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: 'none',
+                                            background: 'transparent',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            color: '#ef4444'
+                                        }}
+                                        onMouseEnter={(e) => e.target.style.background = '#fef2f2'}
+                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                    >
+                                        <Trash2 size={16} />
+                                        <span>Delete Project</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -643,6 +785,288 @@ const ProjectDetails = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Project Modal */}
+            {showEditModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        maxWidth: '500px',
+                        width: '90%',
+                        maxHeight: '80vh',
+                        overflow: 'auto'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b' }}>Edit Project</h2>
+                            <button
+                                onClick={() => setShowEditModal(false)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: '4px'
+                                }}
+                            >
+                                <X size={24} color="#64748b" />
+                            </button>
+                        </div>
+
+                        {editError && (
+                            <div style={{
+                                padding: '12px',
+                                background: '#fef2f2',
+                                border: '1px solid #fecaca',
+                                borderRadius: '8px',
+                                color: '#ef4444',
+                                marginBottom: '1rem',
+                                fontSize: '14px'
+                            }}>
+                                {editError}
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                    Client Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="client_name"
+                                    value={editFormData.client_name}
+                                    onChange={handleEditChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                    Project Owner
+                                </label>
+                                <input
+                                    type="text"
+                                    name="project_owner_name"
+                                    value={editFormData.project_owner_name}
+                                    onChange={handleEditChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                    Deal Value (₹)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="deal_value"
+                                    value={editFormData.deal_value}
+                                    onChange={handleEditChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                    Start Date
+                                </label>
+                                <input
+                                    type="date"
+                                    name="start_date"
+                                    value={editFormData.start_date}
+                                    onChange={handleEditChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                    Expected Closure Date
+                                </label>
+                                <input
+                                    type="date"
+                                    name="expected_closure_date"
+                                    value={editFormData.expected_closure_date}
+                                    onChange={handleEditChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px', marginTop: '1.5rem' }}>
+                            <button
+                                onClick={() => setShowEditModal(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    background: 'white',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: '#64748b',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveEdit}
+                                disabled={editSaving}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    border: 'none',
+                                    background: editSaving ? '#94a3b8' : 'var(--primary)',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: 'white',
+                                    cursor: editSaving ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {editSaving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        maxWidth: '400px',
+                        width: '90%'
+                    }}>
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{
+                                width: '48px',
+                                height: '48px',
+                                background: '#fef2f2',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 1rem'
+                            }}>
+                                <AlertCircle size={24} color="#ef4444" />
+                            </div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem' }}>
+                                Delete Project?
+                            </h2>
+                            <p style={{ fontSize: '14px', color: '#64748b' }}>
+                                This action cannot be undone. All project data will be permanently removed.
+                            </p>
+                        </div>
+
+                        {editError && (
+                            <div style={{
+                                padding: '12px',
+                                background: '#fef2f2',
+                                border: '1px solid #fecaca',
+                                borderRadius: '8px',
+                                color: '#ef4444',
+                                marginBottom: '1rem',
+                                fontSize: '14px'
+                            }}>
+                                {editError}
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    background: 'white',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: '#64748b',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmDelete}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    border: 'none',
+                                    background: '#ef4444',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: 'white',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
