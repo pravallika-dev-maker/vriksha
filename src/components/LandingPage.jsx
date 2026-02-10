@@ -21,7 +21,7 @@ const LandingPage = () => {
                 <p className="hero-subheading">
                     Track projects stage-wise, monitor progress, and maintain full lifecycle visibility.
                 </p>
-                <Link to="/register" className="btn-hero-cta">Go to Dashboard</Link>
+                <Link to="/login" className="btn-hero-cta">Go to Dashboard</Link>
 
                 <div className="hero-mockup-wrapper">
                     <div className="mockup-preview">
