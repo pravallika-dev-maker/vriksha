@@ -153,7 +153,9 @@ export const updateProjectStatus = async (recordId, statusData) => {
 
 export const checkEmailExists = async (email) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/check-email/${email}`);
+        const response = await fetch(`${API_BASE_URL}/auth/check-email/${email}`, {
+            headers: getAuthHeaders()
+        });
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || 'Access not granted. Please contact the administrator.');
