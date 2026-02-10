@@ -89,10 +89,13 @@ const LoginPage = () => {
                 const { data, error: verifyError } = await supabase.auth.verifyOtp({
                     email,
                     token: otp,
-                    type: 'email'
+                    type: 'magiclink'
                 });
 
-                if (verifyError) throw verifyError;
+                if (verifyError) {
+                    console.error('Supabase Verification Error:', verifyError);
+                    throw verifyError;
+                }
 
                 // After Supabase verifies the session, we also sync with our backend user object
                 const check = await checkEmailExists(email);
@@ -100,6 +103,7 @@ const LoginPage = () => {
                 navigate('/dashboard');
             }
         } catch (err) {
+            console.error('Login Process Error:', err);
             setError(err.message || 'Authentication failed.');
         } finally {
             setLoading(false);
@@ -158,11 +162,11 @@ const LoginPage = () => {
                                 <input
                                     type="text"
                                     value={otp}
-                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
-                                    placeholder="00000000"
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    placeholder="000000"
                                     required
                                     autoFocus
-                                    style={{ borderRadius: '10px', padding: '12px', textAlign: 'center', fontSize: '1.5rem', letterSpacing: '4px', maxWidth: '100%' }}
+                                    style={{ borderRadius: '10px', padding: '12px', textAlign: 'center', fontSize: '1.5rem', letterSpacing: '8px', maxWidth: '100%' }}
                                 />
                                 <p style={{ fontSize: '0.85rem', color: '#64748b', textAlign: 'center', marginTop: '12px' }}>
                                     Didn't get the code? <span onClick={handleResendOTP} style={{ color: 'var(--vriksha-blue)', cursor: 'pointer', fontWeight: '600' }}>Resend</span>
