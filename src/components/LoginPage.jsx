@@ -34,15 +34,16 @@ const LoginPage = () => {
 
             if (!check.user.can_add_users) {
                 // If not CEO, trigger OTP immediately
+                // We allow creating the user in Supabase Auth if they are authorized in our DB
                 const { error: otpError } = await supabase.auth.signInWithOtp({
                     email: email,
                     options: {
-                        shouldCreateUser: false, // Ensure only existing authorized users can login
+                        shouldCreateUser: true,
                     }
                 });
 
                 if (otpError) throw otpError;
-                setSuccess('A 6-digit code has been sent to your email.');
+                setSuccess('A verification code has been sent to your email.');
             }
 
             setStep(2);
@@ -60,7 +61,7 @@ const LoginPage = () => {
         try {
             const { error: otpError } = await supabase.auth.signInWithOtp({
                 email: email,
-                options: { shouldCreateUser: false }
+                options: { shouldCreateUser: true }
             });
             if (otpError) throw otpError;
             setSuccess('A new code has been sent to your email.');
