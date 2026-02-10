@@ -62,8 +62,9 @@ const ProjectDetails = () => {
                     client_name: projectData.client_name || '',
                     project_owner_name: projectData.project_owner_name || '',
                     deal_value: projectData.deal_value || '',
-                    start_date: projectData.start_date || '',
-                    expected_closure_date: projectData.expected_closure_date || ''
+                    project_started_date: projectData.project_started_date || '',
+                    next_stage_expected_date: projectData.next_stage_expected_date || '',
+                    resources: teamData.map(r => ({ resource_name: r.resource_name, role: r.role })) || []
                 });
                 setLoading(false);
             } catch (err) {
@@ -202,12 +203,50 @@ const ProjectDetails = () => {
         }));
     };
 
+    const handleResourceChange = (index, e) => {
+        const { name, value } = e.target;
+        const updatedResources = [...editFormData.resources];
+        updatedResources[index][name] = value;
+        setEditFormData(prev => ({
+            ...prev,
+            resources: updatedResources
+        }));
+    };
+
+    const handleAddResource = () => {
+        setEditFormData(prev => ({
+            ...prev,
+            resources: [...prev.resources, { resource_name: '', role: '' }]
+        }));
+    };
+
+    const handleRemoveResource = (index) => {
+        const updatedResources = editFormData.resources.filter((_, i) => i !== index);
+        setEditFormData(prev => ({
+            ...prev,
+            resources: updatedResources
+        }));
+    };
+
     const handleSaveEdit = async () => {
         setEditSaving(true);
         setEditError(null);
         try {
-            const updatedProject = await updateProject(recordId, editFormData);
+            // Filter out empty resources and parse numbers
+            const filteredResources = editFormData.resources.filter(r => r.resource_name.trim() !== '');
+            const finalData = {
+                ...editFormData,
+                resources: filteredResources,
+                deal_value: parseFloat(editFormData.deal_value) || 0
+            };
+
+            const updatedProject = await updateProject(recordId, finalData);
             setProject(updatedProject);
+
+            // Refresh team data
+            const teamData = await fetchResourcesByProject(recordId);
+            setTeam(teamData);
+
             setShowEditModal(false);
         } catch (err) {
             setEditError(err.message || 'Failed to update project');
@@ -905,8 +944,8 @@ const ProjectDetails = () => {
                                 </label>
                                 <input
                                     type="date"
-                                    name="start_date"
-                                    value={editFormData.start_date}
+                                    name="project_started_date"
+                                    value={editFormData.project_started_date}
                                     onChange={handleEditChange}
                                     style={{
                                         width: '100%',
@@ -920,12 +959,12 @@ const ProjectDetails = () => {
 
                             <div>
                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
-                                    Expected Closure Date
+                                    Expected Next Stage Date
                                 </label>
                                 <input
                                     type="date"
-                                    name="expected_closure_date"
-                                    value={editFormData.expected_closure_date}
+                                    name="next_stage_expected_date"
+                                    value={editFormData.next_stage_expected_date}
                                     onChange={handleEditChange}
                                     style={{
                                         width: '100%',
@@ -935,6 +974,57 @@ const ProjectDetails = () => {
                                         fontSize: '14px'
                                     }}
                                 />
+                            </div>
+
+                            {/* Resources editing section */}
+                            <div style={{ marginTop: '0.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <label style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>
+                                        Team Members
+                                    </label>
+                                    <button
+                                        onClick={handleAddResource}
+                                        style={{
+                                            padding: '4px 8px',
+                                            background: '#f1f5f9',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '6px',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        + Add
+                                    </button>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {editFormData.resources?.map((resource, index) => (
+                                        <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input
+                                                type="text"
+                                                name="resource_name"
+                                                placeholder="Name"
+                                                value={resource.resource_name}
+                                                onChange={(e) => handleResourceChange(index, e)}
+                                                style={{ flex: 2, padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px' }}
+                                            />
+                                            <input
+                                                type="text"
+                                                name="role"
+                                                placeholder="Role"
+                                                value={resource.role}
+                                                onChange={(e) => handleResourceChange(index, e)}
+                                                style={{ flex: 1, padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px' }}
+                                            />
+                                            <button
+                                                onClick={() => handleRemoveResource(index)}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px' }}
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
