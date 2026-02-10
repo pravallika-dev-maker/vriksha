@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkEmailExists, loginUser } from '../services/api';
+import { AlertCircle } from 'lucide-react';
 import { supabase } from '../services/supabaseConfig';
 
 const LoginPage = () => {
