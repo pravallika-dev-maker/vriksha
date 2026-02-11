@@ -137,7 +137,12 @@ const ProjectDetails = () => {
 
     const canManageProject = () => {
         if (!user || !project) return false;
-        return user.can_add_users || project.project_owner_name === user.full_name;
+        // CEO can manage everything
+        if (user.can_add_users) return true;
+        // If it's a private project, only CEO can manage it
+        if (project.is_private) return false;
+        // Regular users must have WRITE access to manage public projects
+        return user.access_level === 'WRITE';
     };
 
     // Stage Skip Handlers

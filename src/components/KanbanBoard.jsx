@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ProjectCard from './ProjectCard';
 
 const KanbanBoard = ({ projects, stages }) => {
+    const [hoveredStage, setHoveredStage] = useState(null);
     // 1. Filter and Deduplicate
     // Include both 'Project' and 'Pilot' deal_types for the dashboard
     const projectOnlyDeals = projects.filter(p => {
@@ -60,7 +61,11 @@ const KanbanBoard = ({ projects, stages }) => {
                 return (
                     <div
                         key={stage.key}
-                        className={`stage-column stage-${stage.key.replace(/[^a-z0-9]/g, '-')}`}
+                        className={`stage-column stage-${stage.key.replace(/[^a-z0-9]/g, '-')} ${hoveredStage === stage.key ? 'stage-expanded' : ''
+                            } ${hoveredStage && hoveredStage !== stage.key ? 'stage-faded' : ''
+                            }`}
+                        onMouseEnter={() => setHoveredStage(stage.key)}
+                        onMouseLeave={() => setHoveredStage(null)}
                     >
                         <div className="column-header">
                             <div className="column-title">{stage.name}</div>

@@ -30,49 +30,58 @@ const ProjectCard = ({ project, stageName }) => {
     };
 
     return (
-        <div
-            className={`project-card ${getStageClass(stageName)}`}
-            onClick={() => navigate(`/project/${record_id}`)}
-        >
-            <div className="card-header" style={{ marginBottom: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span className="detail-label" style={{ margin: 0 }}>{deal_type}</span>
-                    <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        background: 'var(--primary)',
-                        boxShadow: '0 0 8px var(--primary)'
-                    }}></div>
-                </div>
-                <h3 className="project-name">{client_name}</h3>
-            </div>
+        <div className="project-card-container">
+            <div
+                className={`project-card ${getStageClass(stageName)}`}
+                onClick={() => navigate(`/project/${record_id}`)}
+            >
+                {/* Always Visible - Simplified Info */}
+                <div className="card-simple-content">
+                    <h3 className="project-name">{client_name}</h3>
 
-            <div className="project-owner">
-                <div className="owner-avatar">{project_owner_name.charAt(0)}</div>
-                <span>{project_owner_name}</span>
-            </div>
+                    <div className="project-owner">
+                        <div className="owner-avatar">{project_owner_name.charAt(0)}</div>
+                        <span>{project_owner_name}</span>
+                    </div>
 
-            <div className="card-details">
-                <div className="detail-item">
-                    <p className="detail-label">Deal Value</p>
-                    <p className="detail-value budget">{formatCurrency(deal_value)}</p>
-                </div>
-            </div>
-
-            {next_stage_name && (
-                <div className="next-step">
-                    <span className="next-step-title">Next Stage</span>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                        <p className="milestone-name">{next_stage_name}</p>
-                        {next_stage_expected_date && (
-                            <p className="detail-label" style={{ margin: 0, fontSize: '0.65rem', opacity: 0.8 }}>
-                                {next_stage_expected_date}
-                            </p>
-                        )}
+                    <div className="card-details">
+                        <div className="detail-item">
+                            <p className="detail-label">Potential Value</p>
+                            <p className="detail-value budget">{formatCurrency(deal_value)}</p>
+                        </div>
                     </div>
                 </div>
-            )}
+
+                {/* Expanded Details - Content inside the same card */}
+                <div className="card-expanded-content">
+                    <div className="card-header" style={{ marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span className="detail-label" style={{ margin: 0 }}>{deal_type}</span>
+                            <div style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                background: 'var(--primary)',
+                                boxShadow: '0 0 8px var(--primary)'
+                            }}></div>
+                        </div>
+                    </div>
+
+                    {next_stage_name && (
+                        <div className="next-step">
+                            <span className="next-step-title">Next Stage</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                                <p className="milestone-name">{next_stage_name}</p>
+                                {next_stage_expected_date && (
+                                    <p className="detail-label" style={{ margin: 0, fontSize: '0.65rem', opacity: 0.8 }}>
+                                        {next_stage_expected_date}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

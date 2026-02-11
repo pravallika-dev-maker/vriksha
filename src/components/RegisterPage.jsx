@@ -11,6 +11,7 @@ const RegisterPage = () => {
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
+        accessLevel: 'READ' // Default to READ
     });
 
     useEffect(() => {
@@ -42,11 +43,12 @@ const RegisterPage = () => {
             await registerUser({
                 email: formData.email,
                 full_name: formData.fullName,
-                can_add_users: false // New users by default cannot add others
+                can_add_users: false, // New users by default cannot add others
+                access_level: formData.accessLevel
             });
 
-            setSuccess(`User ${formData.fullName} has been authorized. Note: No automatic email is sent until they attempt to log in. Please share the dashboard URL with them to begin.`);
-            setFormData({ fullName: '', email: '' });
+            setSuccess(`Success! ${formData.fullName} has been authorized with ${formData.accessLevel} access. A welcome email is being sent to ${formData.email} now.`);
+            setFormData({ fullName: '', email: '', accessLevel: 'READ' });
         } catch (err) {
             setError(err.message || 'Failed to authorize user. Please check if email is unique.');
         } finally {
@@ -94,14 +96,44 @@ const RegisterPage = () => {
                         />
                     </div>
 
-                    <button type="submit" className="btn-register" disabled={loading} style={{ background: 'var(--primary)', color: 'white' }}>
+                    <div className="form-group">
+                        <label htmlFor="accessLevel">Access Level</label>
+                        <select
+                            id="accessLevel"
+                            name="accessLevel"
+                            value={formData.accessLevel}
+                            onChange={handleChange}
+                            className="access-level-select"
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: '12px',
+                                border: '1px solid #e2e8f0',
+                                backgroundColor: '#f8fafc',
+                                fontSize: '15px',
+                                outline: 'none',
+                                transition: 'all 0.2s',
+                                appearance: 'none',
+                                background: 'url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E") no-repeat right 12px center #f8fafc',
+                                backgroundSize: '16px'
+                            }}
+                        >
+                            <option value="READ">READ (View Only)</option>
+                            <option value="WRITE">WRITE (View & Manage)</option>
+                        </select>
+                        <p style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
+                            READ allows viewing projects. WRITE allows creating and updating projects.
+                        </p>
+                    </div>
+
+                    <button type="submit" className="btn-register" disabled={loading}>
                         {loading ? 'Authorizing...' : 'Authorize User'}
                     </button>
 
                     <button
                         type="button"
+                        className="btn-back-dashboard"
                         onClick={() => navigate('/dashboard')}
-                        style={{ width: '100%', marginTop: '10px', padding: '10px', background: 'none', border: '1px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', color: '#64748b' }}
                     >
                         Back to Dashboard
                     </button>

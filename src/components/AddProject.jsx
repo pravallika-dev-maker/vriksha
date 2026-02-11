@@ -17,7 +17,7 @@ const AddProject = () => {
         project_started_date: '',
         starting_stage_name: '',
         next_stage_expected_date: '',
-        parent_record_id: ''
+        is_private: false
     });
 
     const [resources, setResources] = useState([
@@ -149,7 +149,7 @@ const AddProject = () => {
                 project_started_date: formData.project_started_date,
                 starting_stage_name: formData.starting_stage_name,
                 next_stage_expected_date: formData.next_stage_expected_date || null,
-                parent_record_id: formData.parent_record_id || null,
+                is_private: formData.is_private,
                 resources: filteredResources
             };
 
@@ -306,20 +306,24 @@ const AddProject = () => {
                                 />
                             </div>
 
-                            {/* Parent Record ID */}
-                            <div className="form-group">
-                                <label htmlFor="parent_record_id">
-                                    Parent Record ID (Optional)
-                                </label>
-                                <input
-                                    type="text"
-                                    id="parent_record_id"
-                                    name="parent_record_id"
-                                    value={formData.parent_record_id}
-                                    onChange={handleChange}
-                                    placeholder="Reference ID"
-                                />
-                            </div>
+                            {/* Private Project Toggle (CEO only) */}
+                            {JSON.parse(localStorage.getItem('user') || 'null')?.can_add_users && (
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px 0' }}>
+                                        <input
+                                            type="checkbox"
+                                            name="is_private"
+                                            checked={formData.is_private}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, is_private: e.target.checked }))}
+                                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                                        />
+                                        <div>
+                                            <span style={{ fontWeight: '600', color: '#1a202c' }}>Mark as Private Project</span>
+                                            <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>Private projects are confidential and visible only to the CEO.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -327,13 +331,6 @@ const AddProject = () => {
                     <div className="form-section">
                         <div className="section-header">
                             <h3 className="section-title">Team Resources</h3>
-                            <button
-                                type="button"
-                                onClick={handleAddResource}
-                                className="btn-add-resource"
-                            >
-                                + Add Member
-                            </button>
                         </div>
                         <div className="resources-list">
                             {resources.map((resource, index) => (
@@ -366,6 +363,21 @@ const AddProject = () => {
                                     </button>
                                 </div>
                             ))}
+
+                            {/* Show Plus Icon only when last fields are filled */}
+                            {resources[resources.length - 1].resource_name.trim() !== '' &&
+                                resources[resources.length - 1].role.trim() !== '' && (
+                                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddResource}
+                                            className="btn-add-resource-circle"
+                                            title="Add another member"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                )}
                         </div>
                     </div>
 

@@ -178,20 +178,27 @@
     align-items: center;
 }
 
-.btn-add-resource {
-    padding: 8px 16px;
-    background-color: #e0e7ff;
+.btn-add-resource-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e0e7ff;
     color: #4338ca;
     border: 1px solid #c7d2fe;
-    border-radius: 6px;
-    font-size: 13px;
+    font-size: 22px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
 }
 
-.btn-add-resource:hover {
+.btn-add-resource-circle:hover {
     background-color: #c7d2fe;
+    transform: scale(1.1);
 }
 
 .resources-list {
@@ -252,5 +259,34 @@
     .btn-cancel,
     .btn-submit {
         width: 100%;
+    }
+
+    .resource-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        position: relative;
+        padding: 12px;
+        background: white;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
+
+    .btn-remove-resource {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #ef4444;
+        color: white;
+        border: 2px solid white;
+        width: 26px;
+        height: 26px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        z-index: 2;
+    }
+
+    .resource-row .form-group {
+        margin: 0;
     }
 }
