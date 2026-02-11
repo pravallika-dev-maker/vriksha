@@ -1,0 +1,60 @@
+/* Project Owners Section */
+.project-owners-wrapper {
+    grid-column: span 2;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.project-owners-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.project-owner-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 12px;
+    background: white;
+    padding: 10px;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.project-owner-row:last-child {
+    margin-bottom: 0;
+}
+
+.project-owner-row select {
+    width: 100%;
+    margin: 0;
+    /* Override default margins */
+}
+
+/* Ensure remove button is vertically centered and looks good */
+.project-owner-row .btn-remove-resource {
+    position: static;
+    /* Reset absolute positioning from media query if any */
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    .project-owner-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        position: relative;
+    }
+
+    .project-owner-row .btn-remove-resource {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+    }
+}

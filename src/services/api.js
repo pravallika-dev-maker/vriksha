@@ -1,6 +1,17 @@
 const API_BASE_URL = 'https://backend-production-42b0.up.railway.app';
 console.log('Using Hardcoded API_BASE_URL:', API_BASE_URL);
 
+export const fetchUsers = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/users`, { headers: getAuthHeaders() });
+        if (!response.ok) throw new Error('Failed to fetch users');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+    }
+};
+
 // Helper to get auth headers
 const getAuthHeaders = () => {
     const user = JSON.parse(localStorage.getItem('user') || 'null');

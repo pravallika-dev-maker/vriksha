@@ -1,0 +1,64 @@
+/* Project Owners Section */
+.project-owners-wrapper {
+    grid-column: span 2;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 10px;
+}
+
+.project-owners-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.project-owner-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 12px;
+    background: white;
+    padding: 12px;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s;
+}
+
+.project-owner-row:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e0;
+}
+
+.project-owner-row .form-group {
+    margin: 0;
+}
+
+.project-owner-row select {
+    width: 100%;
+}
+
+.project-owner-row .btn-remove-resource {
+    margin-top: 3px;
+    /* visual alignment */
+}
+
+@media (max-width: 768px) {
+    .project-owner-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        position: relative;
+        padding-top: 24px;
+    }
+
+    .project-owner-row .btn-remove-resource {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createProject, fetchStages } from '../services/api';
+import { createProject, fetchStages, fetchUsers } from '../services/api';
 import './AddProject.css';
 
 const AddProject = () => {
@@ -8,11 +8,11 @@ const AddProject = () => {
     const [stages, setStages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [allUsers, setAllUsers] = useState([]);
 
     const [formData, setFormData] = useState({
         client_name: '',
         deal_type: 'Pilot',
-        project_owner_name: '',
         deal_value: '',
         project_started_date: '',
         starting_stage_name: '',
@@ -20,8 +20,12 @@ const AddProject = () => {
         is_private: false
     });
 
+    const [projectOwners, setProjectOwners] = useState([
+        { name: '', email: '', access_level: 'WRITE' } // Default one owner
+    ]);
+
     const [resources, setResources] = useState([
-        { resource_name: '', role: '' }
+        { resource_name: '', role: '', email: '', access_level: 'READ' }
     ]);
 
     const [errors, setErrors] = useState({});
@@ -30,13 +34,36 @@ const AddProject = () => {
         loadStages();
     }, []);
 
+    const handleAddOwner = () => {
+        setProjectOwners([...projectOwners, { name: '', email: '', access_level: 'WRITE' }]);
+    };
+
+    const handleRemoveOwner = (index) => {
+        const updatedOwners = projectOwners.filter((_, i) => i !== index);
+        setProjectOwners(updatedOwners.length > 0 ? updatedOwners : [{ name: '', email: '', access_level: 'WRITE' }]);
+    };
+
+    const handleOwnerChange = (index, e) => {
+        const { name, value } = e.target;
+        const updatedOwners = [...projectOwners];
+
+        if (name === 'project_owner_name') {
+            const selectedUser = allUsers.find(u => u.full_name === value);
+            updatedOwners[index].name = value;
+            updatedOwners[index].email = selectedUser ? selectedUser.email : '';
+        } else {
+            updatedOwners[index][name] = value;
+        }
+        setProjectOwners(updatedOwners);
+    };
+
     const handleAddResource = () => {
-        setResources([...resources, { resource_name: '', role: '' }]);
+        setResources([...resources, { resource_name: '', role: '', email: '', access_level: 'READ' }]);
     };
 
     const handleRemoveResource = (index) => {
         const updatedResources = resources.filter((_, i) => i !== index);
-        setResources(updatedResources.length > 0 ? updatedResources : [{ resource_name: '', role: '' }]);
+        setResources(updatedResources.length > 0 ? updatedResources : [{ resource_name: '', role: '', email: '', access_level: 'READ' }]);
     };
 
     const handleResourceChange = (index, e) => {
@@ -51,13 +78,18 @@ const AddProject = () => {
             // Get user from localStorage
             const user = JSON.parse(localStorage.getItem('user') || 'null');
             if (user && user.full_name) {
-                setFormData(prev => ({
-                    ...prev,
-                    project_owner_name: user.full_name
-                }));
+                if (user && user.full_name) {
+                    // Set initial owner to logged in user if available
+                    setProjectOwners([{ name: user.full_name, email: user.email, access_level: 'WRITE' }]);
+                }
             }
 
-            const stagesData = await fetchStages();
+            const [stagesData, usersData] = await Promise.all([
+                fetchStages(),
+                fetchUsers()
+            ]);
+
+            setAllUsers(usersData);
             const sortedStages = stagesData.sort((a, b) => a.stage_order - b.stage_order);
             setStages(sortedStages);
 
@@ -76,10 +108,15 @@ const AddProject = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+
+        if (name === 'project_owner_name') {
+            // Deprecated handler for single owner, keeping just in case but shouldn't be hit with new UI
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
 
         // Clear error for this field
         if (errors[name]) {
@@ -97,8 +134,10 @@ const AddProject = () => {
             newErrors.client_name = 'Client name is required';
         }
 
-        if (!formData.project_owner_name.trim()) {
-            newErrors.project_owner_name = 'Project owner is required';
+        // Check if at least one owner is selected
+        const validOwners = projectOwners.filter(o => o.name && o.name.trim() !== '');
+        if (validOwners.length === 0) {
+            newErrors.project_owner_name = 'At least one project owner is required';
         }
 
         if (!formData.deal_value || parseFloat(formData.deal_value) <= 0) {
@@ -141,10 +180,28 @@ const AddProject = () => {
             // Filter out empty resources
             const filteredResources = resources.filter(r => r.resource_name.trim() !== '');
 
+            // Process Owners
+            const validOwners = projectOwners.filter(o => o.name && o.name.trim() !== '');
+            const ownerNames = validOwners.map(o => o.name).join(', ');
+
+            // Add owners to resources list
+            validOwners.forEach(owner => {
+                // Check if owner is already in resources (by email) to avoid duplicates
+                const exists = filteredResources.some(r => r.email === owner.email);
+                if (!exists) {
+                    filteredResources.push({
+                        resource_name: owner.name,
+                        role: 'Project Owner',
+                        email: owner.email,
+                        access_level: owner.access_level
+                    });
+                }
+            });
+
             const projectData = {
                 client_name: formData.client_name,
                 deal_type: formData.deal_type,
-                project_owner_name: formData.project_owner_name,
+                project_owner_name: ownerNames,
                 deal_value: parseFloat(formData.deal_value),
                 project_started_date: formData.project_started_date,
                 starting_stage_name: formData.starting_stage_name,
@@ -217,21 +274,61 @@ const AddProject = () => {
                                 </select>
                             </div>
 
-                            {/* Project Owner */}
-                            <div className="form-group">
-                                <label htmlFor="project_owner_name">
-                                    Project Owner <span className="required">*</span>
+                            {/* Multiple Project Owners Section */}
+                            <div className="project-owners-wrapper">
+                                <label className="project-owners-label">
+                                    Project Owner(s) <span className="required">*</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    id="project_owner_name"
-                                    name="project_owner_name"
-                                    value={formData.project_owner_name}
-                                    onChange={handleChange}
-                                    placeholder="Enter project owner name"
-                                    className={errors.project_owner_name ? 'error' : ''}
-                                />
-                                {errors.project_owner_name && <span className="error-text">{errors.project_owner_name}</span>}
+                                {projectOwners.map((owner, index) => (
+                                    <div key={index} className="project-owner-row">
+                                        <div className="form-group">
+                                            <select
+                                                name="project_owner_name"
+                                                value={owner.name}
+                                                onChange={(e) => handleOwnerChange(index, e)}
+                                                className={errors.project_owner_name ? 'error' : ''}
+                                            >
+                                                <option value="">Select Owner</option>
+                                                {allUsers.map(u => (
+                                                    <option key={u.email} value={u.full_name}>
+                                                        {u.full_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <select
+                                                name="access_level"
+                                                value={owner.access_level}
+                                                onChange={(e) => handleOwnerChange(index, e)}
+                                            >
+                                                <option value="READ">Read Only</option>
+                                                <option value="WRITE">Read & Write</option>
+                                            </select>
+                                        </div>
+                                        {projectOwners.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveOwner(index)}
+                                                className="btn-remove-resource"
+                                                title="Remove Owner"
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                                <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '8px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddOwner}
+                                        className="btn-add-owner-text"
+                                        title="Add another owner"
+                                    >
+                                        <span style={{ fontSize: '18px', fontWeight: 'bold', marginRight: '4px' }}>+</span> Add Owner
+                                    </button>
+                                </div>
+                                {errors.project_owner_name && <span className="error-text" style={{ display: 'block', marginTop: '5px' }}>{errors.project_owner_name}</span>}
                             </div>
 
                             {/* Deal Value */}
@@ -335,22 +432,24 @@ const AddProject = () => {
                         <div className="resources-list">
                             {resources.map((resource, index) => (
                                 <div key={index} className="resource-row">
-                                    <div className="form-group flex-1">
+                                    <div className="form-group">
                                         <input
                                             type="text"
                                             name="resource_name"
                                             value={resource.resource_name}
                                             onChange={(e) => handleResourceChange(index, e)}
                                             placeholder="Resource Name"
+                                            style={{ padding: '8px' }}
                                         />
                                     </div>
-                                    <div className="form-group flex-1">
+                                    <div className="form-group">
                                         <input
                                             type="text"
                                             name="role"
                                             value={resource.role}
                                             onChange={(e) => handleResourceChange(index, e)}
-                                            placeholder="Role (e.g. Developer)"
+                                            placeholder="Role"
+                                            style={{ padding: '8px' }}
                                         />
                                     </div>
                                     <button

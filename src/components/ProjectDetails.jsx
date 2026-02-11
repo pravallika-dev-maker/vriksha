@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchProjectById, fetchResourcesByProject, fetchStages, fetchStageHistory, updateProjectStatus, skipToStage, updateProject, deleteProject } from '../services/api';
 import ProgressTimeline from './ProgressTimeline';
-import { ArrowLeft, Users, Calendar, Activity, ChevronRight, DollarSign, AlertCircle, MoreVertical, Edit2, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Activity, ChevronRight, DollarSign, AlertCircle, MoreVertical, Edit2, Trash2, X, Lock, Unlock } from 'lucide-react';
 
 const ProjectDetails = () => {
     const { recordId } = useParams();
@@ -73,7 +73,12 @@ const ProjectDetails = () => {
                     deal_value: projectData.deal_value || '',
                     project_started_date: projectData.project_started_date || '',
                     next_stage_expected_date: projectData.next_stage_expected_date || '',
-                    resources: teamData.map(r => ({ resource_name: r.resource_name, role: r.role })) || []
+                    resources: teamData.map(r => ({
+                        resource_name: r.resource_name,
+                        role: r.role,
+                        email: r.email,
+                        access_level: r.access_level
+                    })) || []
                 });
                 setLoading(false);
             } catch (err) {
@@ -131,6 +136,20 @@ const ProjectDetails = () => {
         }
     };
 
+    const handlePrivacyToggle = async () => {
+        if (!user?.can_add_users || !project) return;
+
+        try {
+            const updatedProject = await updateProject(recordId, {
+                is_private: !project.is_private
+            });
+            setProject(updatedProject);
+        } catch (err) {
+            console.error('Failed to update privacy:', err);
+            alert('Error updating privacy status: ' + err.message);
+        }
+    };
+
     const isProjectReadOnly = () => {
         return project && (project.deal_status === 'Lost' || project.deal_status === 'Closed');
     };
@@ -139,10 +158,15 @@ const ProjectDetails = () => {
         if (!user || !project) return false;
         // CEO can manage everything
         if (user.can_add_users) return true;
-        // If it's a private project, only CEO can manage it
-        if (project.is_private) return false;
-        // Regular users must have WRITE access to manage public projects
-        return user.access_level === 'WRITE';
+
+        // Check for explicit assignment in team resources
+        const userResource = team.find(member => member.email === user.email);
+        if (userResource) {
+            return userResource.access_level === 'WRITE';
+        }
+
+        // If not assigned or no write access, they cannot manage
+        return false;
     };
 
     // Stage Skip Handlers
@@ -319,6 +343,26 @@ const ProjectDetails = () => {
 
                 {/* 1. Project Header - Name and Owner FIRST */}
                 <div className="project-header-section" style={{ position: 'relative' }}>
+                    {/* Read Only Warning Banner */}
+                    {!canManageProject() && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            background: '#fffbeb',
+                            border: '1px solid #fcd34d',
+                            borderRadius: '8px',
+                            color: '#b45309',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            marginBottom: '16px'
+                        }}>
+                            <AlertCircle size={16} />
+                            <span>You have Read Only access to this project. Contact the Lead Owner for edit permissions.</span>
+                        </div>
+                    )}
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <h1 className="project-main-title">{project.client_name}</h1>
@@ -326,6 +370,32 @@ const ProjectDetails = () => {
                                 <Users size={16} />
                                 <span className="owner-text">Lead Owner: <strong>{project.project_owner_name}</strong></span>
                             </div>
+
+                            {/* Privacy Toggle (CEO only) */}
+                            {user?.can_add_users && (
+                                <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <button
+                                        onClick={handlePrivacyToggle}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '8px 16px',
+                                            borderRadius: '20px',
+                                            border: project.is_private ? '1px solid #fed7d7' : '1px solid #c6f6d5',
+                                            background: project.is_private ? '#fff5f5' : '#f0fff4',
+                                            color: project.is_private ? '#c53030' : '#2f855a',
+                                            cursor: 'pointer',
+                                            fontSize: '13px',
+                                            fontWeight: '700',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                    >
+                                        {project.is_private ? <Lock size={14} /> : <Unlock size={14} />}
+                                        {project.is_private ? 'Private Project' : 'Public Project'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Three-Dot Menu */}
