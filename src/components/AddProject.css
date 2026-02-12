@@ -346,21 +346,49 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .add-project-container {
+        padding: 16px 12px;
+    }
+
     .add-project-card {
-        padding: 24px;
+        padding: 24px 20px;
+        border-radius: 20px;
+        margin-top: 0;
+    }
+
+    .add-project-card h1 {
+        font-size: 26px;
+        text-align: center;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .form-section {
+        gap: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        text-align: center;
     }
 
     .form-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
 
-    .form-actions {
-        flex-direction: column-reverse;
+    /* Force full-width for elements that might have inline span-2 */
+    .form-grid>.form-group[style*="grid-column"] {
+        grid-column: span 1 !important;
     }
 
-    .btn-cancel,
-    .btn-submit {
-        width: 100%;
+    .project-owners-wrapper {
+        grid-column: span 1 !important;
+        gap: 12px;
     }
 
     .project-owner-row,
@@ -368,16 +396,70 @@
         grid-template-columns: 1fr;
         gap: 12px;
         position: relative;
-        padding: 20px;
+        padding: 40px 16px 16px 16px;
+        /* Top padding for remove button */
         background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+    .project-owner-row .form-group,
+    .resource-row .form-group {
+        width: 100%;
+    }
+
+    .project-owner-row select,
+    .resource-row input,
+    .resource-row select {
+        width: 100%;
+        font-size: 14px;
     }
 
     .btn-remove-resource {
         position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 32px;
-        height: 32px;
-        font-size: 18px;
+        top: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+
+    .btn-add-owner-text {
+        justify-content: center;
+        width: 100%;
+        margin-left: 0;
+        background-color: #ecfdf5;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 20px;
+    }
+
+    .btn-cancel,
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    /* Adjust checkbox label for mobile */
+    .checkbox-label {
+        align-items: flex-start !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .add-project-card {
+        padding: 20px 16px;
+    }
+
+    .add-project-card h1 {
+        font-size: 22px;
+    }
+
+    .section-title {
+        font-size: 16px;
     }
 }

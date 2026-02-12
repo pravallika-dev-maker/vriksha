@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchProjects, fetchStages } from '../services/api';
+import { fetchProjects, fetchStages, fetchUsers } from '../services/api';
 import KanbanBoard from './KanbanBoard';
 
 const Dashboard = () => {
@@ -86,98 +86,104 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-container">
-            <header className="dashboard-header">
-                <div style={{ flex: 1 }}>
-                    <h1>Vriksha Command Center</h1>
-                    <p>Internal Project & Deal Tracking System</p>
-                </div>
-
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <header className="dashboard-header" style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto 1fr',
+                gap: '20px',
+                alignItems: 'center',
+                padding: '1.5rem 0'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                     {user && (
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '12px',
-                            padding: '8px 16px',
-                            background: 'white',
-                            borderRadius: '12px',
+                            gap: '8px',
+                            padding: '6px 12px',
+                            background: '#f8fafc',
+                            borderRadius: '20px',
                             border: '1px solid #e2e8f0',
-                            boxShadow: 'var(--shadow-subtle)'
+                            flexShrink: 0
                         }}>
                             <div style={{
-                                width: '32px',
-                                height: '32px',
+                                width: '24px',
+                                height: '24px',
                                 borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%)',
+                                background: 'linear-gradient(135deg, #81c784 0%, #dcedc1 100%)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: '#2d5a27',
+                                color: 'white',
                                 fontWeight: '700',
-                                fontSize: '14px'
+                                fontSize: '11px'
                             }}>
                                 {user.full_name?.charAt(0).toUpperCase()}
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Logged in as</span>
-                                <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>{user.full_name}</span>
-                            </div>
+                            <span style={{ fontSize: '13px', color: '#475569', fontWeight: '600', whiteSpace: 'nowrap' }}>{user.full_name}</span>
                         </div>
                     )}
+                </div>
 
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        {/* CEO ONLY OPTION */}
-                        {user?.can_add_users && (
-                            <button
-                                onClick={() => navigate('/register')}
-                                style={{
-                                    padding: '10px 20px',
-                                    background: '#f1f5f9',
-                                    color: '#1e293b',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: '8px',
-                                    fontWeight: '600',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Authorize Users
-                            </button>
-                        )}
+                <div style={{ textAlign: 'center' }}>
+                    <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800' }}>Vriksha Command Center</h1>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b', fontWeight: '500' }}>Internal Project & Deal Tracking System</p>
+                </div>
 
-                        {/* CEO or WRITE users can add projects */}
-                        {(user?.can_add_users || user?.access_level === 'WRITE') && (
-                            <button
-                                className="add-project-btn"
-                                onClick={() => navigate('/add-project')}
-                                style={{
-                                    padding: '12px 24px',
-                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                + Add Project
-                            </button>
-                        )}
-
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                    {/* CEO ONLY OPTION */}
+                    {user?.can_add_users && (
                         <button
-                            onClick={handleLogout}
+                            onClick={() => navigate('/register')}
                             style={{
-                                padding: '10px 15px',
-                                background: 'none',
-                                color: '#ef4444',
-                                border: 'none',
+                                padding: '8px 16px',
+                                background: '#f1f5f9',
+                                color: '#1e293b',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '8px',
                                 fontWeight: '600',
+                                fontSize: '13px',
                                 cursor: 'pointer'
                             }}
                         >
-                            Logout
+                            Authorize Users
                         </button>
-                    </div>
+                    )}
+
+                    {/* CEO or WRITE users can add projects */}
+                    {(user?.can_add_users || user?.access_level === 'WRITE') && (
+                        <button
+                            className="add-project-btn"
+                            onClick={() => navigate('/add-project')}
+                            style={{
+                                padding: '10px 20px',
+                                background: 'linear-gradient(135deg, #10b981 0%, #65a30d 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}
+                        >
+                            + Add Project
+                        </button>
+                    )}
+
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            padding: '8px 12px',
+                            background: 'none',
+                            color: '#ef4444',
+                            border: 'none',
+                            fontWeight: '600',
+                            fontSize: '13px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Logout
+                    </button>
                 </div>
             </header>
 
