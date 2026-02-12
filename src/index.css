@@ -1273,6 +1273,21 @@ body::-webkit-scrollbar {
     }
 }
 
+/* Pulse animation for ownership indicator */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
 @media (max-width: 768px) {
     .features-grid {
         grid-template-columns: 1fr;

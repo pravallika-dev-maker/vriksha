@@ -11,7 +11,7 @@ const formatCurrency = (value) => {
     }).format(num);
 };
 
-const ProjectCard = ({ project, stageName }) => {
+const ProjectCard = ({ project, stageName, currentUser }) => {
     const navigate = useNavigate();
     const {
         record_id,
@@ -22,6 +22,9 @@ const ProjectCard = ({ project, stageName }) => {
         next_stage_name,
         next_stage_expected_date
     } = project;
+
+    // Check if this project belongs to the current user
+    const isOwnedByUser = currentUser && project_owner_name === currentUser.full_name;
 
     // Helper to get stage-specific class
     const getStageClass = (name) => {
@@ -37,7 +40,23 @@ const ProjectCard = ({ project, stageName }) => {
             >
                 {/* Always Visible - Simplified Info */}
                 <div className="card-simple-content">
-                    <h3 className="project-name">{client_name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <h3 className="project-name" style={{ margin: 0 }}>{client_name}</h3>
+                        {isOwnedByUser && (
+                            <div
+                                style={{
+                                    width: '10px',
+                                    height: '10px',
+                                    borderRadius: '50%',
+                                    background: '#10b981',
+                                    boxShadow: '0 0 8px #10b981',
+                                    animation: 'pulse 2s ease-in-out infinite',
+                                    flexShrink: 0
+                                }}
+                                title="You own this project"
+                            ></div>
+                        )}
+                    </div>
 
                     <div className="project-owner">
                         <div className="owner-avatar">{project_owner_name.charAt(0)}</div>

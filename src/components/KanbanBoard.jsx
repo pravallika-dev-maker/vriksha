@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ProjectCard from './ProjectCard';
 
-const KanbanBoard = ({ projects, stages }) => {
+const KanbanBoard = ({ projects, stages, currentUser }) => {
     const [hoveredStage, setHoveredStage] = useState(null);
     // 1. Filter and Deduplicate
     // Include both 'Project' and 'Pilot' deal_types for the dashboard
@@ -77,6 +77,7 @@ const KanbanBoard = ({ projects, stages }) => {
                                     key={`${project.record_id || idx}`}
                                     project={project}
                                     stageName={stage.name}
+                                    currentUser={currentUser}
                                 />
                             ))}
                         </div>

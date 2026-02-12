@@ -150,6 +150,7 @@ const Dashboard = () => {
             <KanbanBoard
                 projects={data.projects}
                 stages={data.stages}
+                currentUser={user}
             />
         </div>
     );

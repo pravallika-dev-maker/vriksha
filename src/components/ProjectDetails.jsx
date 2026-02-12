@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchProjectById, fetchResourcesByProject, fetchStages, fetchStageHistory, updateProjectStatus, skipToStage, updateProject, deleteProject } from '../services/api';
+import { fetchProjectById, fetchResourcesByProject, fetchStages, fetchStageHistory, updateProjectStatus, skipToStage, updateProject, deleteProject, fetchUsers } from '../services/api';
 import ProgressTimeline from './ProgressTimeline';
 import { ArrowLeft, Users, Calendar, Activity, ChevronRight, DollarSign, AlertCircle, MoreVertical, Edit2, Trash2, X, Lock, Unlock } from 'lucide-react';
 
@@ -37,6 +37,8 @@ const ProjectDetails = () => {
     const [editSaving, setEditSaving] = useState(false);
     const [editError, setEditError] = useState(null);
     const [user, setUser] = useState(null);
+    const [allUsers, setAllUsers] = useState([]);
+    const [projectOwners, setProjectOwners] = useState([]);
 
     useEffect(() => {
         const getProjectDetails = async () => {
@@ -50,11 +52,12 @@ const ProjectDetails = () => {
                 }
                 setUser(currentUser);
 
-                const [projectData, teamData, stagesData, historyData] = await Promise.all([
+                const [projectData, teamData, stagesData, historyData, usersData] = await Promise.all([
                     fetchProjectById(recordId),
                     fetchResourcesByProject(recordId),
                     fetchStages(),
-                    fetchStageHistory(recordId)
+                    fetchStageHistory(recordId),
+                    fetchUsers()
                 ]);
 
                 if (!projectData) throw new Error('Project record not found');
@@ -63,6 +66,18 @@ const ProjectDetails = () => {
                 setTeam(teamData);
                 setStages(stagesData);
                 setHistory(historyData);
+                setAllUsers(usersData);
+
+                // Separate owners from regular resources
+                const owners = teamData.filter(r => r.role === 'Project Owner');
+                const regularResources = teamData.filter(r => r.role !== 'Project Owner');
+
+                setProjectOwners(owners.map(o => ({
+                    name: o.resource_name,
+                    email: o.email,
+                    access_level: o.access_level || 'READ'
+                })));
+
                 setStatusFormData({
                     deal_status: projectData.deal_status || 'Open',
                     execution_status: projectData.execution_status || 'Planning'
@@ -73,7 +88,7 @@ const ProjectDetails = () => {
                     deal_value: projectData.deal_value || '',
                     project_started_date: projectData.project_started_date || '',
                     next_stage_expected_date: projectData.next_stage_expected_date || '',
-                    resources: teamData.map(r => ({
+                    resources: regularResources.map(r => ({
                         resource_name: r.resource_name,
                         role: r.role,
                         email: r.email,
@@ -271,15 +286,71 @@ const ProjectDetails = () => {
         }));
     };
 
+    // Project Owner handlers
+    const handleOwnerChange = (index, e) => {
+        const { name, value } = e.target;
+        const updatedOwners = [...projectOwners];
+
+        if (name === 'project_owner_name') {
+            // Find the selected user
+            const selectedUser = allUsers.find(u => u.full_name === value);
+            updatedOwners[index] = {
+                ...updatedOwners[index],
+                name: value,
+                email: selectedUser?.email || ''
+            };
+        } else if (name === 'access_level') {
+            updatedOwners[index] = {
+                ...updatedOwners[index],
+                access_level: value
+            };
+        }
+
+        setProjectOwners(updatedOwners);
+    };
+
+    const handleAddOwner = () => {
+        setProjectOwners([...projectOwners, { name: '', email: '', access_level: 'READ' }]);
+    };
+
+    const handleRemoveOwner = (index) => {
+        if (projectOwners.length > 1) {
+            setProjectOwners(projectOwners.filter((_, i) => i !== index));
+        }
+    };
+
     const handleSaveEdit = async () => {
         setEditSaving(true);
         setEditError(null);
         try {
-            // Filter out empty resources and parse numbers
-            const filteredResources = editFormData.resources.filter(r => r.resource_name.trim() !== '');
+            // Combine owners and resources
+            const ownerResources = projectOwners
+                .filter(o => o.name.trim() !== '')
+                .map(o => ({
+                    resource_name: o.name,
+                    role: 'Project Owner',
+                    email: o.email,
+                    access_level: o.access_level
+                }));
+
+            const regularResources = editFormData.resources
+                .filter(r => r.resource_name.trim() !== '')
+                .map(r => ({
+                    resource_name: r.resource_name,
+                    role: r.role,
+                    email: r.email || '',
+                    access_level: r.access_level || 'READ'
+                }));
+
+            const allResources = [...ownerResources, ...regularResources];
+
+            // Update project_owner_name to the first owner's name
+            const leadOwnerName = projectOwners[0]?.name || editFormData.project_owner_name;
+
             const finalData = {
                 ...editFormData,
-                resources: filteredResources,
+                project_owner_name: leadOwnerName,
+                resources: allResources,
                 deal_value: parseFloat(editFormData.deal_value) || 0
             };
 
@@ -289,6 +360,26 @@ const ProjectDetails = () => {
             // Refresh team data
             const teamData = await fetchResourcesByProject(recordId);
             setTeam(teamData);
+
+            // Update local state
+            const owners = teamData.filter(r => r.role === 'Project Owner');
+            const regularTeam = teamData.filter(r => r.role !== 'Project Owner');
+
+            setProjectOwners(owners.map(o => ({
+                name: o.resource_name,
+                email: o.email,
+                access_level: o.access_level || 'READ'
+            })));
+
+            setEditFormData(prev => ({
+                ...prev,
+                resources: regularTeam.map(r => ({
+                    resource_name: r.resource_name,
+                    role: r.role,
+                    email: r.email,
+                    access_level: r.access_level
+                }))
+            }));
 
             setShowEditModal(false);
         } catch (err) {
@@ -1000,25 +1091,6 @@ const ProjectDetails = () => {
 
                             <div>
                                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
-                                    Project Owner
-                                </label>
-                                <input
-                                    type="text"
-                                    name="project_owner_name"
-                                    value={editFormData.project_owner_name}
-                                    onChange={handleEditChange}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px',
-                                        border: '1px solid #e2e8f0',
-                                        borderRadius: '8px',
-                                        fontSize: '14px'
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
                                     Deal Value (₹)
                                 </label>
                                 <input
@@ -1072,6 +1144,93 @@ const ProjectDetails = () => {
                                         fontSize: '14px'
                                     }}
                                 />
+                            </div>
+
+                            {/* Project Owners Section */}
+                            <div style={{ marginTop: '0.5rem' }}>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '8px' }}>
+                                    Project Owner(s) <span style={{ color: '#ef4444' }}>*</span>
+                                </label>
+                                {projectOwners.map((owner, index) => (
+                                    <div key={index} style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '2fr 1fr auto',
+                                        gap: '8px',
+                                        marginBottom: '8px',
+                                        padding: '12px',
+                                        background: '#f8fafc',
+                                        borderRadius: '8px',
+                                        border: '1px solid #e2e8f0'
+                                    }}>
+                                        <select
+                                            name="project_owner_name"
+                                            value={owner.name}
+                                            onChange={(e) => handleOwnerChange(index, e)}
+                                            style={{
+                                                padding: '8px 12px',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '6px',
+                                                fontSize: '13px'
+                                            }}
+                                        >
+                                            <option value="">Select Owner</option>
+                                            {allUsers.map(u => (
+                                                <option key={u.email} value={u.full_name}>
+                                                    {u.full_name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <select
+                                            name="access_level"
+                                            value={owner.access_level}
+                                            onChange={(e) => handleOwnerChange(index, e)}
+                                            style={{
+                                                padding: '8px 12px',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '6px',
+                                                fontSize: '13px'
+                                            }}
+                                        >
+                                            <option value="READ">Read Only</option>
+                                            <option value="WRITE">Read & Write</option>
+                                        </select>
+                                        {projectOwners.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveOwner(index)}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    color: '#ef4444',
+                                                    padding: '4px',
+                                                    fontSize: '18px',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={handleAddOwner}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#10b981',
+                                        fontWeight: '600',
+                                        fontSize: '13px',
+                                        cursor: 'pointer',
+                                        padding: '6px 0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '16px' }}>+</span> Add Owner
+                                </button>
                             </div>
 
                             {/* Resources editing section */}
