@@ -92,58 +92,92 @@ const Dashboard = () => {
                     <p>Internal Project & Deal Tracking System</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    {/* CEO ONLY OPTION */}
-                    {user?.can_add_users && (
-                        <button
-                            onClick={() => navigate('/register')}
-                            style={{
-                                padding: '10px 20px',
-                                background: '#f1f5f9',
-                                color: '#1e293b',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Authorize Users
-                        </button>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    {user && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '8px 16px',
+                            background: 'white',
+                            borderRadius: '12px',
+                            border: '1px solid #e2e8f0',
+                            boxShadow: 'var(--shadow-subtle)'
+                        }}>
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#2d5a27',
+                                fontWeight: '700',
+                                fontSize: '14px'
+                            }}>
+                                {user.full_name?.charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Logged in as</span>
+                                <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>{user.full_name}</span>
+                            </div>
+                        </div>
                     )}
 
-                    {/* CEO or WRITE users can add projects */}
-                    {(user?.can_add_users || user?.access_level === 'WRITE') && (
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {/* CEO ONLY OPTION */}
+                        {user?.can_add_users && (
+                            <button
+                                onClick={() => navigate('/register')}
+                                style={{
+                                    padding: '10px 20px',
+                                    background: '#f1f5f9',
+                                    color: '#1e293b',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Authorize Users
+                            </button>
+                        )}
+
+                        {/* CEO or WRITE users can add projects */}
+                        {(user?.can_add_users || user?.access_level === 'WRITE') && (
+                            <button
+                                className="add-project-btn"
+                                onClick={() => navigate('/add-project')}
+                                style={{
+                                    padding: '12px 24px',
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                + Add Project
+                            </button>
+                        )}
+
                         <button
-                            className="add-project-btn"
-                            onClick={() => navigate('/add-project')}
+                            onClick={handleLogout}
                             style={{
-                                padding: '12px 24px',
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                color: 'white',
+                                padding: '10px 15px',
+                                background: 'none',
+                                color: '#ef4444',
                                 border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '14px',
                                 fontWeight: '600',
                                 cursor: 'pointer'
                             }}
                         >
-                            + Add Project
+                            Logout
                         </button>
-                    )}
-
-                    <button
-                        onClick={handleLogout}
-                        style={{
-                            padding: '10px 15px',
-                            background: 'none',
-                            color: '#ef4444',
-                            border: 'none',
-                            fontWeight: '600',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Logout
-                    </button>
+                    </div>
                 </div>
             </header>
 
