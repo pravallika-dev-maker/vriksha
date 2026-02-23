@@ -17,6 +17,8 @@ const AddProject = () => {
         project_started_date: '',
         starting_stage_name: '',
         next_stage_expected_date: '',
+        contract_years: '',
+        project_category: 'Services',
         is_private: false
     });
 
@@ -206,6 +208,8 @@ const AddProject = () => {
                 project_started_date: formData.project_started_date,
                 starting_stage_name: formData.starting_stage_name,
                 next_stage_expected_date: formData.next_stage_expected_date || null,
+                contract_years: formData.contract_years ? parseFloat(formData.contract_years) : null,
+                project_category: formData.project_category,
                 is_private: formData.is_private,
                 resources: filteredResources
             };
@@ -271,6 +275,23 @@ const AddProject = () => {
                                 >
                                     <option value="Pilot">Pilot</option>
                                     <option value="Project">Project</option>
+                                </select>
+                            </div>
+
+                            {/* Project Category */}
+                            <div className="form-group">
+                                <label htmlFor="project_category">
+                                    Project Category <span className="required">*</span>
+                                </label>
+                                <select
+                                    id="project_category"
+                                    name="project_category"
+                                    value={formData.project_category}
+                                    onChange={handleChange}
+                                >
+                                    <option value="Services">Services</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Product">Product</option>
                                 </select>
                             </div>
 
@@ -348,6 +369,23 @@ const AddProject = () => {
                                     className={errors.deal_value ? 'error' : ''}
                                 />
                                 {errors.deal_value && <span className="error-text">{errors.deal_value}</span>}
+                            </div>
+
+                            {/* Contract Duration */}
+                            <div className="form-group">
+                                <label htmlFor="contract_years">
+                                    Contract Duration (Years)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="contract_years"
+                                    name="contract_years"
+                                    value={formData.contract_years}
+                                    onChange={handleChange}
+                                    placeholder="e.g. 1, 2.5"
+                                    min="0"
+                                    step="0.1"
+                                />
                             </div>
 
                             {/* Project Start Date */}

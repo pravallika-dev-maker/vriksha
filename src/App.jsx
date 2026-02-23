@@ -6,6 +6,7 @@ import RegisterPage from './components/RegisterPage';
 import LoginPage from './components/LoginPage';
 import LandingPage from './components/LandingPage';
 import AddProject from './components/AddProject';
+import CEOFinancialOverview from './components/CEOFinancialOverview';
 import './index.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/add-project" element={<AddProject />} />
         <Route path="/project/:recordId" element={<ProjectDetails />} />
+        <Route path="/ceo-financials" element={<CEOFinancialOverview />} />
       </Routes>
     </Router>
   );

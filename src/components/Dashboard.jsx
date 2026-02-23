@@ -132,21 +132,39 @@ const Dashboard = () => {
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
                     {/* CEO ONLY OPTION */}
                     {user?.can_add_users && (
-                        <button
-                            onClick={() => navigate('/register')}
-                            style={{
-                                padding: '8px 16px',
-                                background: '#f1f5f9',
-                                color: '#1e293b',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                fontSize: '13px',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Authorize Users
-                        </button>
+                        <>
+                            <button
+                                onClick={() => navigate('/ceo-financials')}
+                                style={{
+                                    padding: '8px 16px',
+                                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    fontSize: '13px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                }}
+                            >
+                                CEO Financials
+                            </button>
+                            <button
+                                onClick={() => navigate('/register')}
+                                style={{
+                                    padding: '8px 16px',
+                                    background: '#f1f5f9',
+                                    color: '#1e293b',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    fontSize: '13px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Authorize Users
+                            </button>
+                        </>
                     )}
 
                     {/* CEO or WRITE users can add projects */}

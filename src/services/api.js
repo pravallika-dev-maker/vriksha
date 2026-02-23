@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://backend-production-42b0.up.railway.app';
+const API_BASE_URL = 'http://localhost:8000';
 console.log('Using Hardcoded API_BASE_URL:', API_BASE_URL);
 
 export const fetchUsers = async () => {

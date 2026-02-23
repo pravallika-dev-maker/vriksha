@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchProjectById, fetchResourcesByProject, fetchStages, fetchStageHistory, updateProjectStatus, skipToStage, updateProject, deleteProject, fetchUsers } from '../services/api';
 import ProgressTimeline from './ProgressTimeline';
-import { ArrowLeft, Users, Calendar, Activity, ChevronRight, DollarSign, AlertCircle, MoreVertical, Edit2, Trash2, X, Lock, Unlock } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Activity, ChevronRight, DollarSign, AlertCircle, MoreVertical, Edit2, Trash2, X, Lock, Unlock, Tag, Briefcase } from 'lucide-react';
 
 const ProjectDetails = () => {
     const { recordId } = useParams();
@@ -86,6 +86,8 @@ const ProjectDetails = () => {
                     client_name: projectData.client_name || '',
                     project_owner_name: projectData.project_owner_name || '',
                     deal_value: projectData.deal_value || '',
+                    contract_years: projectData.contract_years || '',
+                    project_category: projectData.project_category || 'Services',
                     project_started_date: projectData.project_started_date || '',
                     next_stage_expected_date: projectData.next_stage_expected_date || '',
                     resources: regularResources.map(r => ({
@@ -351,7 +353,9 @@ const ProjectDetails = () => {
                 ...editFormData,
                 project_owner_name: leadOwnerName,
                 resources: allResources,
-                deal_value: parseFloat(editFormData.deal_value) || 0
+                deal_value: parseFloat(editFormData.deal_value) || 0,
+                contract_years: parseFloat(editFormData.contract_years) || null,
+                project_category: editFormData.project_category
             };
 
             const updatedProject = await updateProject(recordId, finalData);
@@ -460,6 +464,10 @@ const ProjectDetails = () => {
                             <div className="owner-badge-inline">
                                 <Users size={16} />
                                 <span className="owner-text">Lead Owner: <strong>{project.project_owner_name}</strong></span>
+                            </div>
+                            <div className="owner-badge-inline" style={{ marginTop: '0.5rem' }}>
+                                <Tag size={16} />
+                                <span className="owner-text">Category: <strong>{project.project_category || 'N/A'}</strong></span>
                             </div>
 
                             {/* Privacy Toggle (CEO only) */}
@@ -743,6 +751,16 @@ const ProjectDetails = () => {
                                 )}
                             </div>
                         </div>
+
+                        <div className="stat-item-inline">
+                            <div className="stat-icon-inline" style={{ background: '#f5f3ff' }}>
+                                <Briefcase size={18} style={{ color: '#5b21b6' }} />
+                            </div>
+                            <div className="stat-details">
+                                <span className="stat-label-inline">Project Category</span>
+                                <span className="stat-value-inline">{project.project_category || 'N/A'}</span>
+                            </div>
+                        </div>
                     </div>
 
                     {isEditingStatus && (
@@ -827,6 +845,14 @@ const ProjectDetails = () => {
                                 <div className="info-row-inline">
                                     <span className="info-label-inline">Expected Date</span>
                                     <span className="info-value-inline">{project.next_stage_expected_date || 'N/A'}</span>
+                                </div>
+                                <div className="info-row-inline">
+                                    <span className="info-label-inline">Contract Length</span>
+                                    <span className="info-value-inline">{project.contract_years ? `${project.contract_years} Years` : 'N/A'}</span>
+                                </div>
+                                <div className="info-row-inline">
+                                    <span className="info-label-inline">Category</span>
+                                    <span className="info-value-inline">{project.project_category || 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
@@ -1106,6 +1132,48 @@ const ProjectDetails = () => {
                                         fontSize: '14px'
                                     }}
                                 />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                    Contract Duration (Years)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="contract_years"
+                                    value={editFormData.contract_years}
+                                    onChange={handleEditChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                    Project Category
+                                </label>
+                                <select
+                                    name="project_category"
+                                    value={editFormData.project_category}
+                                    onChange={handleEditChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        fontSize: '14px',
+                                        background: 'white'
+                                    }}
+                                >
+                                    <option value="Services">Services</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Product">Product</option>
+                                </select>
                             </div>
 
                             <div>

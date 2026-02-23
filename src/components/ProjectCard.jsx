@@ -19,6 +19,7 @@ const ProjectCard = ({ project, stageName, currentUser }) => {
         project_owner_name = 'No Owner',
         deal_value = 0,
         deal_type = 'Project',
+        project_category,
         next_stage_name,
         next_stage_expected_date
     } = project;
@@ -62,6 +63,24 @@ const ProjectCard = ({ project, stageName, currentUser }) => {
                         <div className="owner-avatar">{project_owner_name.charAt(0)}</div>
                         <span>{project_owner_name}</span>
                     </div>
+
+                    {project_category && (
+                        <div style={{
+                            fontSize: '0.65rem',
+                            color: '#6366f1',
+                            background: '#eef2ff',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            width: 'fit-content',
+                            marginTop: '2px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.02em',
+                            border: '1px solid #e0e7ff'
+                        }}>
+                            {project_category}
+                        </div>
+                    )}
 
                     <div className="card-details">
                         <div className="detail-item">
