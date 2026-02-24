@@ -1,5 +1,5 @@
-const API_BASE_URL = 'http://localhost:8000';
-console.log('Using Hardcoded API_BASE_URL:', API_BASE_URL);
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+console.log('Using API_BASE_URL:', API_BASE_URL);
 
 export const fetchUsers = async () => {
     try {
