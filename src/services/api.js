@@ -248,3 +248,82 @@ export const deleteProject = async (recordId) => {
         throw error;
     }
 };
+
+// FINANCE MODULE ENDPOINTS
+export const fetchFinancials = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/finance/financials`, { headers: getAuthHeaders() });
+        if (!response.ok) throw new Error('Failed to fetch financials');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching financials:', error);
+        throw error;
+    }
+};
+
+export const createFinancial = async (data) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/finance/financials`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error('Failed to create financial record');
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating financial:', error);
+        throw error;
+    }
+};
+
+export const fetchCosts = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/finance/costs`, { headers: getAuthHeaders() });
+        if (!response.ok) throw new Error('Failed to fetch costs');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching costs:', error);
+        throw error;
+    }
+};
+
+export const createCost = async (data) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/finance/costs`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error('Failed to create cost item');
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating cost:', error);
+        throw error;
+    }
+};
+
+export const fetchFunds = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/finance/funds`, { headers: getAuthHeaders() });
+        if (!response.ok) throw new Error('Failed to fetch funds');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching funds:', error);
+        throw error;
+    }
+};
+
+export const createFund = async (data) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/finance/funds`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error('Failed to create fund record');
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating fund:', error);
+        throw error;
+    }
+};
